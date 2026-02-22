@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../static/style/index.css">
+    <link rel="icon" href="../static/images/icon.png" type="image/x-icon">
+
+    <meta name="description" content="An immersive clicker game featuring a sleek liquid glass design. Click, score, and compete!">
+    <meta name="author" content="Your Name or Brand">
+    <meta name="keywords" content="clicker, game, glassmorphism, web game, incremental">
+    
+    <meta property="og:title" content="Clicker Game">
+    <meta property="og:description" content="The ultimate clicking experience with modern UI.">
+    <meta property="og:image" content="../static/images/preview.png">
+    
+    <title>Clicker</title>
+</head>
+<body>
+<div id="body" class="liquid-glass">
+    <button id="account" class="liquid-glass">
+        <h1>{{ username }}</h1>
+        <img src="../static/images/account.png" class="icon">
+    </button>
+    <div class="center">
+        <h1 id="score">Total score: {{ score }}</h1>
+        <button id="click" class="liquid-glass">Click!</button>
+    </div>
+</div>
+</body>
+</html>
