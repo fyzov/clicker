@@ -4,23 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/style/index.css">
-    <link rel="icon" href="../static/images/favicon.png">
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="icon" href="../static/img/favicon.png">
     <title>Clicker</title>
 </head>
 
-<body>
+<body data-username="{{ username }}">
     <div id="container" class="blur">
         <button id="account" class="blur">
             {{ username }}
-            <img src="../static/images/account.png">
+            <img src="../static/img/account.png">
         </button>
 
         <div id="content">
-            <h1>Total score: {{ score }}</h1>
-            <button class="blur">Click!</button>
+            <h1>Total score: <span id="score">{{ score }}</span></h1>
+            <button id="clickButton" class="blur">Click!</button>
         </div>
     </div>
+
+    <script src="../static/js/score.js"></script>
 </body>
 
 </html>

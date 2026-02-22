@@ -8,7 +8,7 @@ body {
     align-items: center;
     justify-content: center;
 
-    background: url("../images/background2.png") center/cover fixed no-repeat;
+    background: url("../img/background2.png") center/cover fixed no-repeat;
     color: white;
     font-family: "Inter", sans-serif;
     text-align: center;
