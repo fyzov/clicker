@@ -12,9 +12,9 @@
 <body>
     <header>
         <div id="game" class="blur-block">
-            <a href="/home"><img src="../static/img/home.png" alt="home"></a>
-            <a href="/top"><img src="../static/img/star.png" alt="top"></a>
-            <a href="/upgrade"><img src="../static/img/rocket.png" alt="upgrade"></a>
+            <a href="/home" class="icon"><img src="../static/img/home.png" alt="home"></a>
+            <a href="/top" class="icon"><img src="../static/img/star.png" alt="top"></a>
+            <a href="/upgrade" class="icon"><img src="../static/img/rocket.png" alt="upgrade"></a>
         </div>
 
         <div id="link" class="blur-block">
@@ -23,9 +23,9 @@
     </header>
 
     <main class="blur-block">
-        <span id="title">Total score:</span>
-        <span id="score" class="blur-block">{{ score }}</span>
-        <button id="click" class="blur-block">Click!</button>
+        <img id="userpic" src="../static/img/account.png" alt="account">
+        <span>{{ user }}</span>
+        <button id="exit" class="blur-block">Log out of your account</button>
     </main>
 
     <script src="../static/js/script.js"></script>

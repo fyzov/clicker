@@ -1,11 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///accounts.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
-user_scores = {"admin": 125000}
 
 
 class User(db.Model):
@@ -15,17 +14,14 @@ class User(db.Model):
 
 
 @app.route("/")
+@app.route("/home")
 def index():
-    return render_template("index.html", username="admin", score=user_scores["admin"])
+    return render_template("index.html", score="135B")
 
 
-@app.route("/update_score")
-def update_score():
-    username = request.args.get("username")
-    clicks = int(request.args.get("clicks", 1))
-
-    user_scores[username] += clicks
-    return jsonify({"success": True, "new_score": user_scores[username]})
+@app.route("/account")
+def account():
+    return render_template("account.html", user="admin")
 
 
 if __name__ == "__main__":
