@@ -16,12 +16,17 @@ class User(db.Model):
 @app.route("/")
 @app.route("/home")
 def index():
-    return render_template("index.html", score="135B")
+    return render_template("index.html", score="69B")
 
 
 @app.route("/account")
 def account():
     return render_template("account.html", user="admin")
+
+
+@app.route("/top")
+def top():
+    return render_template("top.html", user="admin")
 
 
 if __name__ == "__main__":
