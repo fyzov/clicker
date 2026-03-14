@@ -29,5 +29,10 @@ def top():
     return render_template("top.html", user="admin")
 
 
+@app.route("/upgrade")
+def upgrade():
+    return render_template("upgrade.html", user="admin")
+
+
 if __name__ == "__main__":
     app.run(debug=True)

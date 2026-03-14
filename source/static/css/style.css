@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap');
 
 * {
     margin: 0;
@@ -10,7 +10,6 @@
     margin-top: 5vw;
     border-radius: 8vw;
     padding: 2vw;
-
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(35px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -24,7 +23,7 @@ body {
     flex-direction: column;
     overflow: hidden;
 
-    background: url("../img/background1.png") center/cover fixed no-repeat;
+    background: url("../img/background2.png") center/cover fixed no-repeat;
     font-family: 'Inter', sans-serif;
     font-weight: 900;
     text-align: center;
@@ -94,11 +93,17 @@ main {
     height: clamp(100px, 63vw, 200px);
 }
 
-
-
 ol {
     margin-top: 7vh;
     font-size: 50px;
+}
+
+.upgrade-btn {
+    margin-top: 20vw;
+    width: 20vw;
+    height: 10vw;
+    border-radius: 40vw;
+    font-size: 40px;
 }
 
 @media (min-width: 1024px) {
