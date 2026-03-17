@@ -1,4 +1,3 @@
-// Получение текущего пользователя из сессии
 async function getCurrentUser() {
     try {
         const response = await fetch('/api/user/info');
@@ -10,7 +9,6 @@ async function getCurrentUser() {
     }
 }
 
-// Загрузка счета пользователя
 async function loadUserScore() {
     try {
         const response = await fetch('/api/user/score');
@@ -27,7 +25,6 @@ async function loadUserScore() {
     }
 }
 
-// Обработка клика
 async function handleClick() {
     try {
         const response = await fetch('/api/user/click', {
@@ -71,9 +68,6 @@ async function buyUpgrade(upgradeType) {
             if (scoreElement) {
                 scoreElement.textContent = data.formatted_score;
             }
-
-            // Обновляем кнопки улучшений
-            updateUpgradeButtons();
 
             showMessage('Upgrade purchased successfully!', 'success');
         } else {
@@ -140,26 +134,7 @@ async function updateUpgradeButtons() {
     }
 }
 
-// Вспомогательные функции
 
-function showFloatingPoints(points) {
-    const floatingElement = document.createElement('div');
-    floatingElement.className = 'floating-points';
-    floatingElement.textContent = `+${points}`;
-
-    const clickButton = document.getElementById('click');
-    if (clickButton) {
-        const rect = clickButton.getBoundingClientRect();
-        floatingElement.style.left = rect.left + rect.width / 2 + 'px';
-        floatingElement.style.top = rect.top + 'px';
-
-        document.body.appendChild(floatingElement);
-
-        setTimeout(() => {
-            floatingElement.remove();
-        }, 1000);
-    }
-}
 
 function showMessage(text, type) {
     const messageElement = document.createElement('div');

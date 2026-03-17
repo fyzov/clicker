@@ -1,12 +1,13 @@
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
+from util import Utils
 import secrets
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///accounts.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = secrets.token_hex(16)  # Секретный ключ для сессий
+app.config["SECRET_KEY"] = secrets.token_hex(16)
 db = SQLAlchemy(app)
 
 
@@ -14,8 +15,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
     score = db.Column(db.Integer, default=0)
-    clicks = db.Column(db.Integer, default=1)  # Множитель клика
-    boost = db.Column(db.Boolean, default=False)  # Буст x2
+    clicks = db.Column(db.Integer, default=1)
+    boost = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
         return {
@@ -27,8 +28,7 @@ class User(db.Model):
         }
 
 
-# Декоратор для проверки авторизации
-def login_required(f):
+def check_login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "username" not in session:
@@ -40,30 +40,29 @@ def login_required(f):
 
 @app.route("/")
 @app.route("/home")
-@login_required
+@check_login
 def index():
     user = User.query.filter_by(name=session["username"]).first()
     if user:
-        # Форматируем число для отображения (B - миллиарды, M - миллионы)
-        score_str = format_score(user.score)
+        score_str = Utils.format_score(user.score)
         return render_template("index.html", score=score_str)
     return redirect(url_for("login_page"))
 
 
 @app.route("/account")
-@login_required
+@check_login
 def account():
     return render_template("account.html", user=session["username"])
 
 
 @app.route("/top")
-@login_required
+@check_login
 def top():
     return render_template("top.html", user=session["username"])
 
 
 @app.route("/upgrade")
-@login_required
+@check_login
 def upgrade():
     return render_template("upgrade.html", user=session["username"])
 
@@ -73,10 +72,8 @@ def login_page():
     if request.method == "POST":
         username = request.form.get("username")
         if username:
-            # Проверяем существует ли пользователь
             user = User.query.filter_by(name=username).first()
             if not user:
-                # Создаем нового пользователя
                 user = User(name=username, score=0)
                 db.session.add(user)
                 db.session.commit()
@@ -93,11 +90,8 @@ def logout():
     return redirect(url_for("login_page"))
 
 
-# API endpoints
-
-
 @app.route("/api/user/score", methods=["GET"])
-@login_required
+@check_login
 def get_user_score():
     """Получить текущий счет пользователя"""
     user = User.query.filter_by(name=session["username"]).first()
@@ -106,14 +100,14 @@ def get_user_score():
             {
                 "success": True,
                 "score": user.score,
-                "formatted_score": format_score(user.score),
+                "formatted_score": Utils.format_score(user.score),
             }
         )
     return jsonify({"success": False, "error": "User not found"}), 404
 
 
 @app.route("/api/user/click", methods=["POST"])
-@login_required
+@check_login
 def handle_click():
     """Обработка клика"""
     user = User.query.filter_by(name=session["username"]).first()
@@ -131,14 +125,14 @@ def handle_click():
                 "success": True,
                 "score": user.score,
                 "points_earned": points,
-                "formatted_score": format_score(user.score),
+                "formatted_score": Utils.format_score(user.score),
             }
         )
     return jsonify({"success": False, "error": "User not found"}), 404
 
 
 @app.route("/api/user/upgrade/<upgrade_type>", methods=["POST"])
-@login_required
+@check_login
 def buy_upgrade(upgrade_type):
     """Покупка улучшений"""
     user = User.query.filter_by(name=session["username"]).first()
@@ -185,7 +179,7 @@ def buy_upgrade(upgrade_type):
             "score": user.score,
             "clicks": user.clicks,
             "boost": user.boost,
-            "formatted_score": format_score(user.score),
+            "formatted_score": Utils.format_score(user.score),
         }
     )
 
@@ -198,7 +192,7 @@ def get_top_users():
 
 
 @app.route("/api/user/info", methods=["GET"])
-@login_required
+@check_login
 def get_user_info():
     """Получить информацию о пользователе"""
     user = User.query.filter_by(name=session["username"]).first()
@@ -207,21 +201,6 @@ def get_user_info():
     return jsonify({"success": False, "error": "User not found"}), 404
 
 
-def format_score(score):
-    """Форматирование числа для отображения"""
-    if score >= 1000000000000:  # 1T и больше
-        return f"{score / 1000000000000:.1f}T"
-    elif score >= 1000000000:  # 1B и больше
-        return f"{score / 1000000000:.1f}B"
-    elif score >= 1000000:  # 1M и больше
-        return f"{score / 1000000:.1f}M"
-    elif score >= 1000:  # 1K и больше
-        return f"{score / 1000:.1f}K"
-    else:
-        return str(score)
-
-
-# Создание таблиц при запуске
 with app.app_context():
     db.create_all()
 

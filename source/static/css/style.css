@@ -106,6 +106,25 @@ ol {
     font-size: 40px;
 }
 
+#login-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+    margin: auto;
+}
+
+#login-form input::placeholder {
+    color: white;
+    opacity: 1;
+}
+
+#login-form input::-webkit-input-placeholder {
+    color: white;
+}
+
 @media (min-width: 1024px) {
     .blur-block {
         margin-top: 20px;
