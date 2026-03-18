@@ -1,23 +1,14 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="../static/img/favicon.png" type="image/x-icon">
-    <link rel="stylesheet" href="../static/css/style.css">
-    <title>Clicker - Login</title>
-</head>
+{% block title %}Clicker - Login{% endblock %}
 
-<body>
-    <main id="login-form" class="blur-block">
-        <h2>Login to Clicker</h2>
-        <form method="POST" action="/login">
-            <input type="text" name="username" placeholder="Enter username" class="blur-block" required>
-            <button type="submit" class="blur-block">Play</button>
-        </form>
-    </main>
-    <script src="../static/js/script.js"></script>
-</body>
-
-</html>
+{% block content %}
+<main id="login-form" class="blur-block">
+    <h2>Login to Clicker</h2>
+    <form id="login-form-element">
+        <input type="text" id="username-input" placeholder="Enter username" class="blur-block" required>
+        <button type="submit" class="blur-block">Play</button>
+    </form>
+    <div id="login-error" class="error-message" style="display: none;"></div>
+</main>
+{% endblock %}

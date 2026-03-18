@@ -1,125 +1,162 @@
-async function getCurrentUser() {
-    try {
-        const response = await fetch('/api/user/info');
-        const data = await response.json();
-        return data.success ? data.user : null;
-    } catch (error) {
-        console.error('Error getting user:', error);
-        return null;
+// Глобальные переменные
+let currentUser = null;
+
+// Инициализация страницы
+document.addEventListener('DOMContentLoaded', async function () {
+    // Загружаем информацию о пользователе
+    currentUser = await API.getCurrentUser();
+
+    // Инициализируем соответствующую страницу
+    if (document.getElementById('click')) {
+        await initGamePage();
+    } else if (document.getElementById('username')) {
+        await initAccountPage();
+    } else if (document.getElementById('top-list')) {
+        await initTopPage();
+    } else if (document.getElementById('click-upgrade')) {
+        await initUpgradePage();
+    } else if (document.getElementById('login-form-element')) {
+        initLoginPage();
+    }
+
+    // Общий обработчик для кнопки выхода
+    const exitButton = document.getElementById('exit');
+    if (exitButton) {
+        exitButton.addEventListener('click', () => {
+            window.location.href = '/logout';
+        });
+    }
+});
+
+// Инициализация игровой страницы
+async function initGamePage() {
+    await updateScore();
+
+    const clickButton = document.getElementById('click');
+    if (clickButton) {
+        clickButton.addEventListener('click', handleClick);
     }
 }
 
-async function loadUserScore() {
-    try {
-        const response = await fetch('/api/user/score');
-        const data = await response.json();
+// Инициализация страницы аккаунта
+async function initAccountPage() {
+    const usernameElement = document.getElementById('username');
 
-        if (data.success) {
-            const scoreElement = document.getElementById('score');
-            if (scoreElement) {
-                scoreElement.textContent = data.formatted_score;
-            }
+    if (currentUser) {
+        usernameElement.textContent = currentUser.name;
+    } else {
+        usernameElement.textContent = 'Not logged in';
+    }
+}
+
+// Инициализация страницы топа
+async function initTopPage() {
+    const topList = document.getElementById('top-list');
+    const users = await API.getTopUsers();
+
+    if (users.length > 0) {
+        topList.innerHTML = '';
+        users.forEach((user, index) => {
+            const li = document.createElement('li');
+            li.textContent = `${index + 1}. ${user.name} - ${API.formatScore(user.score)}`;
+            topList.appendChild(li);
+        });
+    } else {
+        topList.innerHTML = '<li>No players yet</li>';
+    }
+}
+
+// Инициализация страницы улучшений
+async function initUpgradePage() {
+    await updateUpgradeButtons();
+
+    // Обновляем баланс каждые 5 секунд
+    setInterval(updateUpgradeButtons, 5000);
+}
+
+// Инициализация страницы логина
+function initLoginPage() {
+    const loginForm = document.getElementById('login-form-element');
+    const errorDiv = document.getElementById('login-error');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('username-input').value.trim();
+        if (!username) return;
+
+        const success = await API.login(username);
+        if (!success) {
+            errorDiv.textContent = 'Login failed. Please try again.';
+            errorDiv.style.display = 'block';
         }
-    } catch (error) {
-        console.error('Error loading score:', error);
-    }
+    });
 }
 
+// Обработка клика
 async function handleClick() {
-    try {
-        const response = await fetch('/api/user/click', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+    const result = await API.sendClick();
 
-        const data = await response.json();
-
-        if (data.success) {
-            const scoreElement = document.getElementById('score');
-            if (scoreElement) {
-                scoreElement.textContent = data.formatted_score;
-            }
-
-            // Анимация получения очков
-            showFloatingPoints(data.points_earned);
+    if (result && result.success) {
+        const scoreElement = document.getElementById('score');
+        if (scoreElement) {
+            scoreElement.textContent = API.formatScore(result.score);
         }
-    } catch (error) {
-        console.error('Error handling click:', error);
+
+        // Показываем всплывающие очки
+        showFloatingPoints(result.points_earned);
+
+        // Обновляем currentUser
+        currentUser = await API.getCurrentUser();
     }
 }
 
-// Покупка улучшения
-async function buyUpgrade(upgradeType) {
-    try {
-        const response = await fetch(`/api/user/upgrade/${upgradeType}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Обновляем отображение счета
-            const scoreElement = document.getElementById('score');
-            if (scoreElement) {
-                scoreElement.textContent = data.formatted_score;
-            }
-
-            showMessage('Upgrade purchased successfully!', 'success');
-        } else {
-            showMessage(data.error || 'Failed to purchase upgrade', 'error');
+// Обновление счета
+async function updateScore() {
+    const scoreData = await API.getUserScore();
+    if (scoreData && scoreData.success) {
+        const scoreElement = document.getElementById('score');
+        if (scoreElement) {
+            scoreElement.textContent = API.formatScore(scoreData.score);
         }
-    } catch (error) {
-        console.error('Error buying upgrade:', error);
-        showMessage('Error purchasing upgrade', 'error');
     }
 }
 
-// Загрузка топа пользователей
-async function loadTopUsers() {
-    try {
-        const response = await fetch('/api/top/users');
-        const data = await response.json();
-
-        if (data.success) {
-            const topList = document.querySelector('ol');
-            if (topList) {
-                topList.innerHTML = '';
-                data.users.forEach((user, index) => {
-                    const li = document.createElement('li');
-                    li.textContent = `${user.name} - ${formatScore(user.score)}`;
-                    topList.appendChild(li);
-                });
-            }
-        }
-    } catch (error) {
-        console.error('Error loading top users:', error);
-    }
-}
-
-// Обновление состояния кнопок улучшений
+// Обновление кнопок улучшений
 async function updateUpgradeButtons() {
-    const user = await getCurrentUser();
+    const user = await API.getCurrentUser();
     if (!user) return;
+
+    const balanceElement = document.getElementById('balance');
+    if (balanceElement) {
+        balanceElement.textContent = API.formatScore(user.score);
+    }
 
     const clickUpgradeBtn = document.getElementById('click-upgrade');
     const secondUpgradeBtn = document.getElementById('second-upgrade');
     const boostBtn = document.getElementById('boost');
 
+    const prices = {
+        click: 12000000000,
+        second: 1000000,
+        boost: 1000000000000
+    };
+
     if (clickUpgradeBtn) {
-        const price = 12000000000; // 12B
-        clickUpgradeBtn.textContent = `Click upgrade +1 - ${formatScore(price)} (Current: ${user.clicks})`;
-        clickUpgradeBtn.disabled = user.score < price;
+        clickUpgradeBtn.textContent = `Click upgrade +1 - ${API.formatScore(prices.click)} (Current: ${user.clicks})`;
+        clickUpgradeBtn.disabled = user.score < prices.click;
+
+        // Удаляем старый обработчик и добавляем новый
+        clickUpgradeBtn.replaceWith(clickUpgradeBtn.cloneNode(true));
+        document.getElementById('click-upgrade').addEventListener('click', () => handleUpgrade('click'));
     }
 
     if (secondUpgradeBtn) {
-        const price = 1000000; // 1M
-        secondUpgradeBtn.textContent = `Second upgrade +5 - ${formatScore(price)}`;
-        secondUpgradeBtn.disabled = user.score < price;
+        secondUpgradeBtn.textContent = `Second upgrade +5 - ${API.formatScore(prices.second)}`;
+        secondUpgradeBtn.disabled = user.score < prices.second;
+
+        secondUpgradeBtn.replaceWith(secondUpgradeBtn.cloneNode(true));
+        document.getElementById('second-upgrade').addEventListener('click', () => handleUpgrade('second'));
     }
 
     if (boostBtn) {
@@ -127,15 +164,56 @@ async function updateUpgradeButtons() {
             boostBtn.textContent = 'x2 Boost - Purchased';
             boostBtn.disabled = true;
         } else {
-            const price = 1000000000000; // 1T
-            boostBtn.textContent = `x2 Boost - ${formatScore(price)}`;
-            boostBtn.disabled = user.score < price;
+            boostBtn.textContent = `x2 Boost - ${API.formatScore(prices.boost)}`;
+            boostBtn.disabled = user.score < prices.boost;
+
+            boostBtn.replaceWith(boostBtn.cloneNode(true));
+            document.getElementById('boost').addEventListener('click', () => handleUpgrade('boost'));
         }
     }
 }
 
+// Обработка покупки улучшения
+async function handleUpgrade(upgradeType) {
+    const result = await API.buyUpgrade(upgradeType);
 
+    if (result.success) {
+        showMessage('Upgrade purchased successfully!', 'success');
 
+        // Обновляем интерфейс
+        const scoreElement = document.getElementById('score');
+        if (scoreElement) {
+            scoreElement.textContent = API.formatScore(result.score);
+        }
+
+        await updateUpgradeButtons();
+        currentUser = await API.getCurrentUser();
+    } else {
+        showMessage(result.error || 'Failed to purchase upgrade', 'error');
+    }
+}
+
+// Всплывающие очки
+function showFloatingPoints(points) {
+    const pointsElement = document.createElement('div');
+    pointsElement.className = 'floating-points';
+    pointsElement.textContent = `+${points}`;
+
+    const clickButton = document.getElementById('click');
+    if (clickButton) {
+        const rect = clickButton.getBoundingClientRect();
+        pointsElement.style.left = rect.left + rect.width / 2 + 'px';
+        pointsElement.style.top = rect.top + 'px';
+
+        document.body.appendChild(pointsElement);
+
+        setTimeout(() => {
+            pointsElement.remove();
+        }, 1000);
+    }
+}
+
+// Показ сообщений
 function showMessage(text, type) {
     const messageElement = document.createElement('div');
     messageElement.className = `message ${type}`;
@@ -147,65 +225,3 @@ function showMessage(text, type) {
         messageElement.remove();
     }, 3000);
 }
-
-function formatScore(score) {
-    if (score >= 1000000000000) {
-        return (score / 1000000000000).toFixed(1) + 'T';
-    } else if (score >= 1000000000) {
-        return (score / 1000000000).toFixed(1) + 'B';
-    } else if (score >= 1000000) {
-        return (score / 1000000).toFixed(1) + 'M';
-    } else if (score >= 1000) {
-        return (score / 1000).toFixed(1) + 'K';
-    }
-    return score.toString();
-}
-
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function () {
-    // Загружаем счет если мы на главной странице
-    if (document.getElementById('click')) {
-        loadUserScore();
-
-        // Добавляем обработчик клика
-        const clickButton = document.getElementById('click');
-        if (clickButton) {
-            clickButton.addEventListener('click', handleClick);
-        }
-    }
-
-    // Загружаем топ пользователей если мы на странице топа
-    if (document.querySelector('ol')) {
-        loadTopUsers();
-    }
-
-    // Обновляем состояние кнопок улучшений если мы на странице улучшений
-    if (document.getElementById('click-upgrade')) {
-        updateUpgradeButtons();
-
-        // Добавляем обработчики для кнопок улучшений
-        const clickUpgradeBtn = document.getElementById('click-upgrade');
-        const secondUpgradeBtn = document.getElementById('second-upgrade');
-        const boostBtn = document.getElementById('boost');
-
-        if (clickUpgradeBtn) {
-            clickUpgradeBtn.addEventListener('click', () => buyUpgrade('click'));
-        }
-
-        if (secondUpgradeBtn) {
-            secondUpgradeBtn.addEventListener('click', () => buyUpgrade('second'));
-        }
-
-        if (boostBtn) {
-            boostBtn.addEventListener('click', () => buyUpgrade('boost'));
-        }
-    }
-
-    // Обработчик выхода из аккаунта
-    const exitButton = document.getElementById('exit');
-    if (exitButton) {
-        exitButton.addEventListener('click', async () => {
-            window.location.href = '/logout';
-        });
-    }
-});

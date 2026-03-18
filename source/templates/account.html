@@ -1,34 +1,23 @@
-<!DOCTYPE html>
-<html lang="ru">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="../static/img/favicon.png" type="image/x-icon">
-    <link rel="stylesheet" href="../static/css/style.css">
-    <title>Clicker</title>
-</head>
+{% block title %}Clicker - Account{% endblock %}
 
-<body>
-    <header>
-        <div id="game" class="blur-block">
-            <a href="/home" class="icon"><img src="../static/img/home.png" alt="home"></a>
-            <a href="/top" class="icon"><img src="../static/img/star.png" alt="top"></a>
-            <a href="/upgrade" class="icon"><img src="../static/img/rocket.png" alt="upgrade"></a>
-        </div>
+{% block content %}
+<header>
+    <div id="game" class="blur-block">
+        <a href="/home" class="icon"><img src="../static/img/home.png" alt="home"></a>
+        <a href="/top" class="icon"><img src="../static/img/star.png" alt="top"></a>
+        <a href="/upgrade" class="icon"><img src="../static/img/rocket.png" alt="upgrade"></a>
+    </div>
 
-        <div id="link" class="blur-block">
-            <a href="/account" class="icon"><img src="../static/img/account.png" alt="account"></a>
-        </div>
-    </header>
+    <div id="link" class="blur-block">
+        <a href="/account" class="icon"><img src="../static/img/account.png" alt="account"></a>
+    </div>
+</header>
 
-    <main class="blur-block">
-        <img id="userpic" src="../static/img/account.png" alt="account">
-        <span>{{ user }}</span>
-        <button id="exit" class="blur-block">Log out of your account</button>
-    </main>
-
-    <script src="../static/js/script.js"></script>
-</body>
-
-</html>
+<main class="blur-block">
+    <img id="userpic" src="../static/img/account.png" alt="account">
+    <span id="username">Loading...</span>
+    <button id="exit" class="blur-block">Log out of your account</button>
+</main>
+{% endblock %}

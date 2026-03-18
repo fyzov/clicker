@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
-from util import Utils
 import secrets
 
 app = Flask(__name__)
@@ -38,33 +37,30 @@ def check_login(f):
     return decorated_function
 
 
+# Страницы (только рендер шаблонов)
 @app.route("/")
 @app.route("/home")
 @check_login
 def index():
-    user = User.query.filter_by(name=session["username"]).first()
-    if user:
-        score_str = Utils.format_score(user.score)
-        return render_template("index.html", score=score_str)
-    return redirect(url_for("login_page"))
+    return render_template("index.html")
 
 
 @app.route("/account")
 @check_login
 def account():
-    return render_template("account.html", user=session["username"])
+    return render_template("account.html")
 
 
 @app.route("/top")
 @check_login
 def top():
-    return render_template("top.html", user=session["username"])
+    return render_template("top.html")
 
 
 @app.route("/upgrade")
 @check_login
 def upgrade():
-    return render_template("upgrade.html", user=session["username"])
+    return render_template("upgrade.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -90,29 +86,21 @@ def logout():
     return redirect(url_for("login_page"))
 
 
+# API endpoints (только работа с БД)
 @app.route("/api/user/score", methods=["GET"])
 @check_login
 def get_user_score():
-    """Получить текущий счет пользователя"""
     user = User.query.filter_by(name=session["username"]).first()
     if user:
-        return jsonify(
-            {
-                "success": True,
-                "score": user.score,
-                "formatted_score": Utils.format_score(user.score),
-            }
-        )
+        return jsonify({"success": True, "score": user.score})
     return jsonify({"success": False, "error": "User not found"}), 404
 
 
 @app.route("/api/user/click", methods=["POST"])
 @check_login
 def handle_click():
-    """Обработка клика"""
     user = User.query.filter_by(name=session["username"]).first()
     if user:
-        # Рассчитываем очки за клик
         points = user.clicks
         if user.boost:
             points *= 2
@@ -120,30 +108,21 @@ def handle_click():
         user.score += points
         db.session.commit()
 
-        return jsonify(
-            {
-                "success": True,
-                "score": user.score,
-                "points_earned": points,
-                "formatted_score": Utils.format_score(user.score),
-            }
-        )
+        return jsonify({"success": True, "score": user.score, "points_earned": points})
     return jsonify({"success": False, "error": "User not found"}), 404
 
 
 @app.route("/api/user/upgrade/<upgrade_type>", methods=["POST"])
 @check_login
 def buy_upgrade(upgrade_type):
-    """Покупка улучшений"""
     user = User.query.filter_by(name=session["username"]).first()
     if not user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    # Цены улучшений
     upgrade_prices = {
-        "click": 12000000000,  # 12B
-        "second": 1000000,  # 1M
-        "boost": 1000000000000,  # 1T
+        "click": 12000000000,
+        "second": 1000000,
+        "boost": 1000000000000,
     }
 
     if upgrade_type not in upgrade_prices:
@@ -160,14 +139,12 @@ def buy_upgrade(upgrade_type):
             }
         ), 400
 
-    # Применяем улучшение
     user.score -= price
 
     if upgrade_type == "click":
         user.clicks += 1
     elif upgrade_type == "second":
-        # Здесь можно добавить логику для второго улучшения
-        user.clicks += 5  # Например, +5 к клику
+        user.clicks += 5
     elif upgrade_type == "boost":
         user.boost = True
 
@@ -179,14 +156,12 @@ def buy_upgrade(upgrade_type):
             "score": user.score,
             "clicks": user.clicks,
             "boost": user.boost,
-            "formatted_score": Utils.format_score(user.score),
         }
     )
 
 
 @app.route("/api/top/users", methods=["GET"])
 def get_top_users():
-    """Получить топ пользователей"""
     top_users = User.query.order_by(User.score.desc()).limit(10).all()
     return jsonify({"success": True, "users": [user.to_dict() for user in top_users]})
 
@@ -194,7 +169,6 @@ def get_top_users():
 @app.route("/api/user/info", methods=["GET"])
 @check_login
 def get_user_info():
-    """Получить информацию о пользователе"""
     user = User.query.filter_by(name=session["username"]).first()
     if user:
         return jsonify({"success": True, "user": user.to_dict()})
