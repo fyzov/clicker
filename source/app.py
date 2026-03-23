@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
@@ -5,9 +7,17 @@ import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///accounts.db"
+database_url = os.environ.get("DATABASE_URL", "sqlite:///accounts.db")
+
+# Для SQLite на Render нужно сохранять в /tmp, так как основная файловая система временная
+if database_url.startswith("sqlite:///"):
+    # Если это не путь к /tmp, перенаправляем туда
+    if not database_url.endswith("accounts.db") or "/tmp/" not in database_url:
+        database_url = "sqlite:////tmp/accounts.db"
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = secrets.token_hex(16)
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", secrets.token_hex(16))
 db = SQLAlchemy(app)
 
 CLICK_UPGRADE_PRICES = {
