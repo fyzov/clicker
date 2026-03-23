@@ -1,5 +1,4 @@
 import os
-
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
@@ -7,19 +6,21 @@ import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-database_url = os.environ.get("DATABASE_URL", "sqlite:///accounts.db")
 
-# Для SQLite на Render нужно сохранять в /tmp, так как основная файловая система временная
-if database_url.startswith("sqlite:///"):
-    # Если это не путь к /tmp, перенаправляем туда
-    if not database_url.endswith("accounts.db") or "/tmp/" not in database_url:
-        database_url = "sqlite:////tmp/accounts.db"
-
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+# Используем постоянный диск Render для SQLite
+database_path = os.environ.get("DATABASE_PATH", "accounts.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{database_path}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", secrets.token_hex(16))
+
+# Создаем директорию для БД если её нет
+db_dir = os.path.dirname(database_path)
+if db_dir and not os.path.exists(db_dir):
+    os.makedirs(db_dir)
+
 db = SQLAlchemy(app)
 
+# Остальной код без изменений
 CLICK_UPGRADE_PRICES = {
     1: 50,
     2: 100,
@@ -161,12 +162,40 @@ def handle_click():
     user = User.query.filter_by(name=session["username"]).first()
     if user:
         points = user.get_click_power()
-
         user.score += points
         db.session.commit()
-
         return jsonify({"success": True, "score": user.score, "points_earned": points})
     return jsonify({"success": False, "error": "User not found"}), 404
+
+
+@app.route("/api/user/batch-click", methods=["POST"])
+@check_login
+def handle_batch_click():
+    user = User.query.filter_by(name=session["username"]).first()
+    if not user:
+        return jsonify({"success": False, "error": "User not found"}), 404
+
+    data = request.get_json()
+    click_count = data.get("count", 1)
+
+    if click_count <= 0:
+        return jsonify({"success": False, "error": "Invalid click count"}), 400
+
+    points_per_click = user.get_click_power()
+    total_points = points_per_click * click_count
+
+    user.score += total_points
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "score": user.score,
+            "total_points_earned": total_points,
+            "clicks_processed": click_count,
+            "points_per_click": points_per_click,
+        }
+    )
 
 
 @app.route("/api/user/upgrade/<upgrade_type>", methods=["POST"])
@@ -226,7 +255,6 @@ def get_user_info():
 
 with app.app_context():
     db.create_all()
-
 
 if __name__ == "__main__":
     app.run(debug=True)
