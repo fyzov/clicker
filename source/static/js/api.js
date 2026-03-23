@@ -1,6 +1,4 @@
-// API клиент для взаимодействия с сервером
 const API = {
-    // Форматирование счета (теперь на клиенте)
     formatScore(score) {
         if (score >= 1000000000000) {
             return (score / 1000000000000).toFixed(1) + 'T';
@@ -14,7 +12,6 @@ const API = {
         return score.toString();
     },
 
-    // Получить информацию о текущем пользователе
     async getCurrentUser() {
         try {
             const response = await fetch('/api/user/info');
@@ -26,7 +23,6 @@ const API = {
         }
     },
 
-    // Получить счет пользователя
     async getUserScore() {
         try {
             const response = await fetch('/api/user/score');
@@ -38,7 +34,6 @@ const API = {
         }
     },
 
-    // Отправить клик
     async sendClick() {
         try {
             const response = await fetch('/api/user/click', {
@@ -55,7 +50,6 @@ const API = {
         }
     },
 
-    // Купить улучшение
     async buyUpgrade(upgradeType) {
         try {
             const response = await fetch(`/api/user/upgrade/${upgradeType}`, {
@@ -72,7 +66,6 @@ const API = {
         }
     },
 
-    // Получить топ пользователей
     async getTopUsers() {
         try {
             const response = await fetch('/api/top/users');
@@ -84,7 +77,6 @@ const API = {
         }
     },
 
-    // Войти в аккаунт
     async login(username) {
         try {
             const response = await fetch('/login', {
@@ -103,6 +95,23 @@ const API = {
         } catch (error) {
             console.error('Error logging in:', error);
             return false;
+        }
+    },
+
+    async register(username, password) {
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error registering:', error);
+            return { success: false, error: 'Network error' };
         }
     }
 };

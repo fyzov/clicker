@@ -4,11 +4,156 @@
 
 {% block content %}
 <main id="login-form" class="blur-block">
-    <h2>Login to Clicker</h2>
+    <h2>Welcome to Clicker</h2>
+
+    <div class="auth-tabs">
+        <button class="tab-btn active" data-tab="login">Login</button>
+        <button class="tab-btn" data-tab="register">Register</button>
+    </div>
+
     <form id="login-form-element">
-        <input type="text" id="username-input" placeholder="Enter username" class="blur-block" required>
-        <button type="submit" class="blur-block">Play</button>
+        <input type="text" id="username-input" placeholder="Username" class="blur-block" required>
+        <input type="password" id="password-input" placeholder="Password" class="blur-block" required>
+        <button type="submit" id="submit-btn" class="blur-block">Login</button>
     </form>
     <div id="login-error" class="error-message" style="display: none;"></div>
 </main>
+
+<style>
+    .auth-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        justify-content: center;
+    }
+
+    .tab-btn {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.8rem 2rem;
+        border-radius: 2rem;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: scale(1.05);
+    }
+
+    .tab-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.02);
+    }
+
+    #login-form-element input {
+        width: 100%;
+        margin: 0.5rem 0;
+        padding: 0.8rem;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 2rem;
+        color: white;
+        font-size: 1rem;
+    }
+
+    #login-form-element input:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    #submit-btn {
+        width: 100%;
+        margin-top: 1rem;
+        padding: 0.8rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 2rem;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    #submit-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.02);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let currentTab = 'login';
+        const loginForm = document.getElementById('login-form-element');
+        const errorDiv = document.getElementById('login-error');
+        const submitBtn = document.getElementById('submit-btn');
+        const usernameInput = document.getElementById('username-input');
+        const passwordInput = document.getElementById('password-input');
+
+        // Обработка переключения вкладок
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentTab = this.dataset.tab;
+                submitBtn.textContent = currentTab === 'login' ? 'Login' : 'Register';
+                errorDiv.style.display = 'none';
+            });
+        });
+
+        // Обработка отправки формы
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+                formData.append('action', currentTab);
+
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Connection error. Please try again.');
+            }
+        });
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.opacity = '0';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                    errorDiv.style.opacity = '1';
+                }, 300);
+            }, 3000);
+        }
+    });
+</script>
 {% endblock %}
