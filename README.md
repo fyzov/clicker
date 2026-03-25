@@ -1,4 +1,4 @@
 # clicker
 clicker site with database
 
- fyzov.pythonanywhere.com
+ https://fyzov.pythonanywhere.com
